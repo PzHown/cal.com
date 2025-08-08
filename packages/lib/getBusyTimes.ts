@@ -132,7 +132,7 @@ const _getBusyTimes = async (params: {
       // Seat references on the current event are non-blocking until the event is fully booked.
       if (
         // there are still seats available.
-        bookingSeatCountMap[bookedAt] < (eventType?.seatsPerTimeSlot || 1) &&
+        bookingSeatCountMap[bookedAt] < (eventType?.seatsPerTimeSlot || 30) &&
         // and this is the seated event, other event types should be blocked.
         eventTypeId === eventType?.id
       ) {
