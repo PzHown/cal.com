@@ -304,7 +304,7 @@ export async function getBookings({
 
   const queriesWithFilters = bookingQueries.map(({ query, tables }) => {
     // 1. Apply mandatory status filter
-    let fullQuery = addStatusesQueryFilters(query, bookingListingByStatus);
+    let fullQuery = addStatusesQueryFilters(query, bookingListingByStatus, user.timeZone);
 
     // 2. Filter by Event Type IDs derived from Team IDs (if provided)
     if (eventTypeIdsFromTeamIdsFilter && eventTypeIdsFromTeamIdsFilter.length > 0) {
@@ -898,14 +898,25 @@ async function getUserIdsAndEmailsWhereUserIsAdminOrOwner(
   return [userIds, userEmails];
 }
 
-function addStatusesQueryFilters(query: BookingsUnionQuery, statuses: InputByStatus[]) {
+/**
+ * Gets the current time in the user's timezone converted to UTC for database comparison
+ */
+function getCurrentTimeInUserTimezone(userTimeZone: string | null) {
+  const timezone = userTimeZone || "UTC";
+  // Get current time in user's timezone, then convert to UTC Date object for database comparison
+  return dayjs().tz(timezone).utc().toDate();
+}
+
+function addStatusesQueryFilters(query: BookingsUnionQuery, statuses: InputByStatus[], userTimeZone?: string | null) {
   if (statuses?.length) {
+    const currentTime = getCurrentTimeInUserTimezone(userTimeZone);
+    
     return query.where(({ eb, or, and }) =>
       or(
         statuses.map((status) => {
           if (status === "upcoming") {
             return and([
-              eb("Booking.endTime", ">=", new Date()),
+              eb("Booking.endTime", ">=", currentTime),
               or([
                 and([eb("Booking.recurringEventId", "is not", null), eb("Booking.status", "=", "accepted")]),
                 and([
@@ -918,7 +929,7 @@ function addStatusesQueryFilters(query: BookingsUnionQuery, statuses: InputBySta
 
           if (status === "recurring") {
             return and([
-              eb("Booking.endTime", ">=", new Date()),
+              eb("Booking.endTime", ">=", currentTime),
               eb("Booking.recurringEventId", "is not", null),
               eb("Booking.status", "not in", ["cancelled", "rejected"]),
             ]);
@@ -926,7 +937,7 @@ function addStatusesQueryFilters(query: BookingsUnionQuery, statuses: InputBySta
 
           if (status === "past") {
             return and([
-              eb("Booking.endTime", "<=", new Date()),
+              eb("Booking.endTime", "<=", currentTime),
               eb("Booking.status", "not in", ["cancelled", "rejected"]),
             ]);
           }
@@ -936,7 +947,7 @@ function addStatusesQueryFilters(query: BookingsUnionQuery, statuses: InputBySta
           }
 
           if (status === "unconfirmed") {
-            return and([eb("Booking.endTime", ">=", new Date()), eb("Booking.status", "=", "pending")]);
+            return and([eb("Booking.endTime", ">=", currentTime), eb("Booking.status", "=", "pending")]);
           }
           return and([]);
         })
