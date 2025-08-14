@@ -193,8 +193,8 @@ export const requestRescheduleHandler = async ({ ctx, input }: RequestReschedule
       ? await getBookerBaseUrl(eventType.team.parentId)
       : await getBookerBaseUrl(user.profile?.organizationId ?? null),
     type: event && event.slug ? event.slug : bookingToReschedule.title,
-    startTime: bookingToReschedule.startTime.toISOString(),
-    endTime: bookingToReschedule.endTime.toISOString(),
+    startTime: dayjs.utc(bookingToReschedule.startTime).toISOString(),
+    endTime: dayjs.utc(bookingToReschedule.endTime).toISOString(),
     hideOrganizerEmail: eventType?.hideOrganizerEmail,
     attendees: usersToPeopleType(
       // username field doesn't exists on attendee but could be in the future

@@ -712,8 +712,8 @@ export async function getBookings({
           currency: booking.eventType?.currency || "usd",
           metadata: EventTypeMetaDataSchema.parse(booking.eventType?.metadata || {}),
         },
-        startTime: booking.startTime.toISOString(),
-        endTime: booking.endTime.toISOString(),
+        startTime: dayjs.utc(booking.startTime).toISOString(),
+        endTime: dayjs.utc(booking.endTime).toISOString(),
       };
     })
   );
@@ -905,7 +905,7 @@ function addStatusesQueryFilters(query: BookingsUnionQuery, statuses: InputBySta
         statuses.map((status) => {
           if (status === "upcoming") {
             return and([
-              eb("Booking.endTime", ">=", new Date()),
+              eb("Booking.endTime", ">=", dayjs.utc().toDate()),
               or([
                 and([eb("Booking.recurringEventId", "is not", null), eb("Booking.status", "=", "accepted")]),
                 and([
@@ -918,7 +918,7 @@ function addStatusesQueryFilters(query: BookingsUnionQuery, statuses: InputBySta
 
           if (status === "recurring") {
             return and([
-              eb("Booking.endTime", ">=", new Date()),
+              eb("Booking.endTime", ">=", dayjs.utc().toDate()),
               eb("Booking.recurringEventId", "is not", null),
               eb("Booking.status", "not in", ["cancelled", "rejected"]),
             ]);
@@ -926,7 +926,7 @@ function addStatusesQueryFilters(query: BookingsUnionQuery, statuses: InputBySta
 
           if (status === "past") {
             return and([
-              eb("Booking.endTime", "<=", new Date()),
+              eb("Booking.endTime", "<=", dayjs.utc().toDate()),
               eb("Booking.status", "not in", ["cancelled", "rejected"]),
             ]);
           }
@@ -936,7 +936,7 @@ function addStatusesQueryFilters(query: BookingsUnionQuery, statuses: InputBySta
           }
 
           if (status === "unconfirmed") {
-            return and([eb("Booking.endTime", ">=", new Date()), eb("Booking.status", "=", "pending")]);
+            return and([eb("Booking.endTime", ">=", dayjs.utc().toDate()), eb("Booking.status", "=", "pending")]);
           }
           return and([]);
         })

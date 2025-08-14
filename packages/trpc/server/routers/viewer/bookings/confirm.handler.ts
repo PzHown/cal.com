@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 
+import dayjs from "@calcom/dayjs";
 import type { LocationObject } from "@calcom/app-store/locations";
 import { getLocationValueForDB } from "@calcom/app-store/locations";
 import { sendDeclinedEmailsAndSMS } from "@calcom/emails";
@@ -209,8 +210,8 @@ export const confirmHandler = async ({ ctx, input }: ConfirmOptions) => {
       booking,
     }),
     customInputs: isPrismaObjOrUndefined(booking.customInputs),
-    startTime: booking.startTime.toISOString(),
-    endTime: booking.endTime.toISOString(),
+    startTime: dayjs.utc(booking.startTime).toISOString(),
+    endTime: dayjs.utc(booking.endTime).toISOString(),
     organizer: {
       email: booking?.userPrimaryEmail || booking.user?.email || "Email-less",
       name: booking.user?.name || "Nameless",
