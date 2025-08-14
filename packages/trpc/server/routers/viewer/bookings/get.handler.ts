@@ -3,7 +3,6 @@ import type { Kysely } from "kysely";
 import { type SelectQueryBuilder } from "kysely";
 import { jsonObjectFrom, jsonArrayFrom } from "kysely/helpers/postgres";
 
-import dayjs from "@calcom/dayjs";
 import { isTextFilterValue } from "@calcom/features/data-table/lib/utils";
 import type { DB } from "@calcom/kysely";
 import kysely from "@calcom/kysely";
@@ -362,10 +361,10 @@ export async function getBookings({
 
     // 7. Booking Start/End Time Range Filters
     if (filters?.afterStartDate) {
-      fullQuery = fullQuery.where("Booking.startTime", ">=", dayjs.utc(filters.afterStartDate).toDate());
+      fullQuery = fullQuery.where("Booking.startTime", ">=", new Date(filters.afterStartDate));
     }
     if (filters?.beforeEndDate) {
-      fullQuery = fullQuery.where("Booking.endTime", "<=", dayjs.utc(filters.beforeEndDate).toDate());
+      fullQuery = fullQuery.where("Booking.endTime", "<=", new Date(filters.beforeEndDate));
     }
 
     return fullQuery;
@@ -381,16 +380,16 @@ export async function getBookings({
     .selectFrom(queryUnion.as("union_subquery"))
     .selectAll("union_subquery")
     .$if(Boolean(filters?.afterUpdatedDate), (eb) =>
-      eb.where("union_subquery.updatedAt", ">=", dayjs.utc(filters.afterUpdatedDate).toDate())
+      eb.where("union_subquery.updatedAt", ">=", new Date(filters.afterUpdatedDate))
     )
     .$if(Boolean(filters?.beforeUpdatedDate), (eb) =>
-      eb.where("union_subquery.updatedAt", "<=", dayjs.utc(filters.beforeUpdatedDate).toDate())
+      eb.where("union_subquery.updatedAt", "<=", new Date(filters.beforeUpdatedDate))
     )
     .$if(Boolean(filters?.afterCreatedDate), (eb) =>
-      eb.where("union_subquery.createdAt", ">=", dayjs.utc(filters.afterCreatedDate).toDate())
+      eb.where("union_subquery.createdAt", ">=", new Date(filters.afterCreatedDate))
     )
     .$if(Boolean(filters?.beforeCreatedDate), (eb) =>
-      eb.where("union_subquery.createdAt", "<=", dayjs.utc(filters.beforeCreatedDate).toDate())
+      eb.where("union_subquery.createdAt", "<=", new Date(filters.beforeCreatedDate))
     )
     .orderBy(orderBy.key, orderBy.order)
     .limit(take)
